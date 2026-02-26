@@ -291,6 +291,7 @@ npm run example:function-refs    # Function interface dependencies
 ## Advanced Guides
 
 - **[Complete Advanced Analysis Guide](docs/ADVANCED_ANALYSIS.md)** - Complete guide combining interface and function analysis
+- **[AI Assistant Usage Guide](docs/AI_USAGE_GUIDE.md)** - Guide for AI assistants and automated systems to leverage this tool
 - [Query Interfaces with Property Type References](docs/interface-property-types.md) - Learn how to include references to all property types when querying interfaces
 - [Function Interface Dependencies](docs/function-interface-dependencies.md) - Find all interfaces referenced in function parameters and return types
 
@@ -298,6 +299,7 @@ npm run example:function-refs    # Function interface dependencies
 
 - [Interface Property Types Quick Ref](docs/PROPERTY_TYPES_QUICK_REF.md)
 - [Function Interface Refs Quick Ref](docs/FUNCTION_REFS_QUICK_REF.md)
+- [FAQ](docs/FAQ.md) - Frequently asked questions and common patterns
 
 ## Testing
 
