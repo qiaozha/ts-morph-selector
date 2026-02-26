@@ -1,0 +1,37 @@
+{
+  "name": "ts-morph-selector",
+  "version": "1.0.0",
+  "description": "SQL-like query language for ts-morph to select and query TypeScript AST nodes",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "example": "ts-node examples/basic.ts",
+    "example:advanced": "ts-node examples/advanced.ts",
+    "example:property-types": "ts-node examples/interface-with-property-types.ts",
+    "example:function-refs": "ts-node examples/function-interface-references.ts",
+    "dev": "ts-node src/index.ts"
+  },
+  "keywords": [
+    "ts-morph",
+    "typescript",
+    "ast",
+    "query",
+    "selector",
+    "sql"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ts-morph": "^21.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/jest": "^29.5.11",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
