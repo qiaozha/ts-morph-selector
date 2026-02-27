@@ -32,7 +32,7 @@ export class TsMorphSelector {
     private options: SelectorOptions = {}
   ) {
     this.parser = new QueryParser();
-    this.executor = new QueryExecutor(project);
+    this.executor = new QueryExecutor(project, options);
   }
   
   /**

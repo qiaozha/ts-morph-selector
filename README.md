@@ -56,6 +56,7 @@ SELECT * FROM <NodeType> [WHERE <conditions>] [WITH REFERENCES]
 - `EnumDeclaration` - Enums
 - `ImportDeclaration` - Import statements
 - `ExportDeclaration` - Export statements
+- `SourceFile` - Source files (for file filtering)
 - `*` - All nodes (use with caution)
 
 ### WHERE Clause
@@ -68,6 +69,9 @@ The WHERE clause supports various conditions:
 - `kind` - Node kind name
 - `text` - Full text of the node
 - `modifier` - Modifiers (public, private, etc.)
+- `path` - Full file path (useful for SourceFile queries)
+- `baseName` - File name with extension (useful for SourceFile queries)
+- `extension` - File extension (useful for SourceFile queries)
 
 #### Operators
 
@@ -134,6 +138,52 @@ const result = selector.query(
 const result = selector.query(
     "SELECT * FROM ClassDeclaration WHERE name LIKE '%Service' AND name != 'BaseService'",
 );
+```
+
+### File Filtering
+
+Query source files directly using SQL-like syntax:
+
+```typescript
+// Find all source files
+const allFiles = selector.query('SELECT * FROM SourceFile');
+
+// Find all service files
+const serviceFiles = selector.query(
+    "SELECT * FROM SourceFile WHERE baseName LIKE '%.service.ts'"
+);
+
+// Find files in specific directory
+const modelFiles = selector.query(
+    "SELECT * FROM SourceFile WHERE path LIKE '%/models/%'"
+);
+
+// Find specific files
+const configFiles = selector.query(
+    "SELECT * FROM SourceFile WHERE baseName IN ('config.ts', 'settings.ts')"
+);
+
+// Find TypeScript files (exclude .d.ts)
+const tsFiles = selector.query(
+    "SELECT * FROM SourceFile WHERE extension = '.ts' AND baseName NOT LIKE '%.d.ts'"
+);
+```
+
+Alternatively, use the `filePattern` option to filter source files before querying other nodes:
+
+```typescript
+// Create selector with file pattern filter
+const serviceSelector = new TsMorphSelector(project, {
+    filePattern: '**/*.service.ts'
+});
+
+// Query only classes in service files
+const serviceClasses = serviceSelector.query('SELECT * FROM ClassDeclaration');
+
+// Multiple file patterns
+const selector = new TsMorphSelector(project, {
+    filePattern: ['**/*.service.ts', '**/*.controller.ts']
+});
 ```
 
 ### With References
@@ -216,6 +266,7 @@ interface QueryResult<T extends Node = Node> {
 interface SelectorOptions {
     includeNodeModules?: boolean;
     maxResults?: number;
+    filePattern?: string | string[];  // Glob patterns to filter source files
 }
 ```
 

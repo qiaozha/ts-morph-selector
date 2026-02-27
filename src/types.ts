@@ -15,7 +15,7 @@ export enum QueryOperator {
 /**
  * Supported property names for WHERE clause
  */
-export type QueryProperty = 'name' | 'kind' | 'text' | 'modifier';
+export type QueryProperty = 'name' | 'kind' | 'text' | 'modifier' | 'path' | 'baseName' | 'extension';
 
 /**
  * A single condition in the WHERE clause
@@ -39,7 +39,7 @@ export type NodeType =
   | 'TypeAliasDeclaration'
   | 'EnumDeclaration'
   | 'ImportDeclaration'
-  | 'ExportDeclaration'
+  | 'ExportDeclaration'  | 'SourceFile'  | 'SourceFile'
   | '*';
 
 /**
@@ -72,4 +72,20 @@ export interface SelectorOptions {
    * Maximum number of results to return
    */
   maxResults?: number;
+  
+  /**
+   * File pattern(s) to filter source files
+   * Supports glob patterns like '**\/*.service.ts' or 'src/models/*.ts'
+   * Can be a single pattern or an array of patterns
+   * 
+   * @example
+   * ```typescript
+   * // Single pattern
+   * { filePattern: '**\/*.service.ts' }
+   * 
+   * // Multiple patterns
+   * { filePattern: ['**\/*.service.ts', '**\/*.controller.ts'] }
+   * ```
+   */
+  filePattern?: string | string[];
 }

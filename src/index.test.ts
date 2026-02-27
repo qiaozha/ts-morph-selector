@@ -1,4 +1,4 @@
-import { Project, InterfaceDeclaration, ClassDeclaration, FunctionDeclaration, TypeAliasDeclaration } from 'ts-morph';
+import { Project, InterfaceDeclaration, ClassDeclaration, FunctionDeclaration, TypeAliasDeclaration, SourceFile } from 'ts-morph';
 import { TsMorphSelector } from '../src/index';
 
 describe('TsMorphSelector', () => {
@@ -103,6 +103,146 @@ describe('TsMorphSelector', () => {
       const limitedSelector = new TsMorphSelector(project, { maxResults: 1 });
       const result = limitedSelector.query<InterfaceDeclaration>('SELECT * FROM InterfaceDeclaration');
       expect(result.nodes).toHaveLength(1);
+    });
+    
+    it('should filter by single file pattern', () => {
+      // Add another source file
+      project.createSourceFile('service.ts', `
+        export interface ServiceConfig {
+          timeout: number;
+        }
+        
+        export class ApiService {}
+      `);
+      
+      const filteredSelector = new TsMorphSelector(project, { filePattern: '**/test.ts' });
+      const result = filteredSelector.query<InterfaceDeclaration>('SELECT * FROM InterfaceDeclaration');
+      
+      // Should only find interfaces from test.ts (User and Product), not ServiceConfig
+      expect(result.nodes).toHaveLength(2);
+      expect(result.nodes.every(node => node.getSourceFile().getFilePath().includes('test.ts'))).toBe(true);
+    });
+    
+    it('should filter by multiple file patterns', () => {
+      // Add multiple source files
+      project.createSourceFile('models/user.model.ts', `
+        export interface UserModel {
+          id: number;
+        }
+      `);
+      
+      project.createSourceFile('models/product.model.ts', `
+        export interface ProductModel {
+          id: number;
+        }
+      `);
+      
+      project.createSourceFile('services/api.service.ts', `
+        export interface ApiConfig {
+          url: string;
+        }
+      `);
+      
+      const filteredSelector = new TsMorphSelector(project, {
+        filePattern: ['**/*.model.ts']
+      });
+      
+      const result = filteredSelector.query<InterfaceDeclaration>('SELECT * FROM InterfaceDeclaration');
+      
+      // Should only find interfaces from .model.ts files (UserModel and ProductModel)
+      expect(result.nodes).toHaveLength(2);
+      expect(result.nodes.every(node => 
+        node.getSourceFile().getFilePath().includes('.model.ts')
+      )).toBe(true);
+    });
+    
+    it('should return empty result when no files match pattern', () => {
+      const filteredSelector = new TsMorphSelector(project, { filePattern: '**/nonexistent.ts' });
+      const result = filteredSelector.query<InterfaceDeclaration>('SELECT * FROM InterfaceDeclaration');
+      
+      expect(result.nodes).toHaveLength(0);
+    });
+    
+    it('should match files using glob patterns', () => {
+      project.createSourceFile('src/services/user.service.ts', `
+        export class UserService {}
+      `);
+      
+      project.createSourceFile('src/controllers/user.controller.ts', `
+        export class UserController {}
+      `);
+      
+      const serviceSelector = new TsMorphSelector(project, { filePattern: '**/*.service.ts' });
+      const result = serviceSelector.query<ClassDeclaration>('SELECT * FROM ClassDeclaration');
+      
+      // Should only find classes from .service.ts files
+      expect(result.nodes.length).toBeGreaterThan(0);
+      expect(result.nodes.every(node => 
+        node.getSourceFile().getFilePath().includes('.service.ts')
+      )).toBe(true);
+    });
+  });
+  
+  describe('SourceFile queries', () => {
+    beforeEach(() => {
+      // Add more test files
+      project.createSourceFile('services/user.service.ts', `
+        export class UserService {}
+      `);
+      
+      project.createSourceFile('services/product.service.ts', `
+        export class ProductService {}
+      `);
+      
+      project.createSourceFile('models/user.model.ts', `
+        export interface UserModel {
+          id: number;
+        }
+      `);
+    });
+    
+    it('should query all SourceFiles', () => {
+      const result = selector.query<SourceFile>('SELECT * FROM SourceFile');
+      expect(result.nodes.length).toBeGreaterThan(0);
+      expect(result.nodes.every(node => node.getKindName() === 'SourceFile')).toBe(true);
+    });
+    
+    it('should filter SourceFiles by baseName', () => {
+      const result = selector.query<SourceFile>("SELECT * FROM SourceFile WHERE baseName = 'test.ts'");
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0].getBaseName()).toBe('test.ts');
+    });
+    
+    it('should filter SourceFiles by baseName pattern', () => {
+      const result = selector.query<SourceFile>("SELECT * FROM SourceFile WHERE baseName LIKE '%.service.ts'");
+      expect(result.nodes.length).toBeGreaterThanOrEqual(2);
+      expect(result.nodes.every(node => node.getBaseName().endsWith('.service.ts'))).toBe(true);
+    });
+    
+    it('should filter SourceFiles by path pattern', () => {
+      const result = selector.query<SourceFile>("SELECT * FROM SourceFile WHERE path LIKE '%services%'");
+      expect(result.nodes.length).toBeGreaterThanOrEqual(2);
+      expect(result.nodes.every(node => node.getFilePath().includes('services'))).toBe(true);
+    });
+    
+    it('should filter SourceFiles by extension', () => {
+      const result = selector.query<SourceFile>("SELECT * FROM SourceFile WHERE extension = '.ts'");
+      expect(result.nodes.length).toBeGreaterThan(0);
+      expect(result.nodes.every(node => node.getExtension() === '.ts')).toBe(true);
+    });
+    
+    it('should filter SourceFiles by multiple conditions', () => {
+      const result = selector.query<SourceFile>("SELECT * FROM SourceFile WHERE baseName LIKE '%.model.ts'");
+      expect(result.nodes.length).toBeGreaterThanOrEqual(1);
+      expect(result.nodes.every(node => node.getBaseName().endsWith('.model.ts'))).toBe(true);
+    });
+    
+    it('should use IN operator with baseName', () => {
+      const result = selector.query<SourceFile>("SELECT * FROM SourceFile WHERE baseName IN ('test.ts', 'user.model.ts')");
+      expect(result.nodes.length).toBeGreaterThanOrEqual(1);
+      expect(result.nodes.every(node => 
+        ['test.ts', 'user.model.ts'].includes(node.getBaseName())
+      )).toBe(true);
     });
   });
   

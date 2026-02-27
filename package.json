@@ -11,6 +11,7 @@
     "example:advanced": "ts-node examples/advanced.ts",
     "example:property-types": "ts-node examples/interface-with-property-types.ts",
     "example:function-refs": "ts-node examples/function-interface-references.ts",
+    "example:file-filtering": "ts-node examples/file-filtering.ts",
     "dev": "ts-node src/index.ts"
   },
   "keywords": [
@@ -28,11 +29,15 @@
   },
   "devDependencies": {
     "@types/jest": "^29.5.11",
+    "@types/minimatch": "^6.0.0",
     "@types/node": "^20.11.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.1",
     "ts-morph": "^23.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "minimatch": "^10.2.4"
   }
 }

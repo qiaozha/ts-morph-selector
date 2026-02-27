@@ -15,19 +15,34 @@ import {
   SourceFile,
   SyntaxKind
 } from 'ts-morph';
-import { ParsedQuery, QueryResult, WhereCondition, QueryOperator, NodeType } from './types';
+import { ParsedQuery, QueryResult, WhereCondition, QueryOperator, NodeType, SelectorOptions } from './types';
+import { minimatch } from 'minimatch';
 
 /**
  * Executes parsed queries against a ts-morph Project
  */
 export class QueryExecutor {
-  constructor(private project: Project) {}
+  constructor(private project: Project, private options: SelectorOptions = {}) {}
   
   /**
    * Execute a parsed query and return matching nodes
    */
   execute<T extends Node = Node>(query: ParsedQuery): QueryResult<T> {
-    const sourceFiles = this.project.getSourceFiles();
+    const allSourceFiles = this.project.getSourceFiles();
+    const sourceFiles = this.filterSourceFiles(allSourceFiles);
+    
+    // Special case: if querying for SourceFile nodes
+    if (query.nodeType === 'SourceFile') {
+      const filteredNodes = query.where
+        ? sourceFiles.filter(node => this.matchesWhereConditions(node, query.where!))
+        : sourceFiles;
+      
+      return {
+        nodes: filteredNodes as unknown as T[],
+        references: undefined
+      };
+    }
+    
     const allNodes: Node[] = [];
     
     // Collect nodes based on node type
@@ -50,6 +65,24 @@ export class QueryExecutor {
       nodes: filteredNodes as T[],
       references: references as Map<T, Node[]> | undefined
     };
+  }
+  
+  /**
+   * Filter source files based on file patterns
+   */
+  private filterSourceFiles(sourceFiles: SourceFile[]): SourceFile[] {
+    if (!this.options.filePattern) {
+      return sourceFiles;
+    }
+    
+    const patterns = Array.isArray(this.options.filePattern)
+      ? this.options.filePattern
+      : [this.options.filePattern];
+    
+    return sourceFiles.filter(sourceFile => {
+      const filePath = sourceFile.getFilePath().replace(/\\/g, '/');
+      return patterns.some(pattern => minimatch(filePath, pattern, { matchBase: true }));
+    });
   }
   
   /**
@@ -162,6 +195,24 @@ export class QueryExecutor {
           return modifiers.map((m: Node) => m.getText()).join(' ');
         }
         return null;
+      
+      case 'path':
+        if ('getFilePath' in node && typeof (node as any).getFilePath === 'function') {
+          return (node as any).getFilePath() || null;
+        }
+        return node.getSourceFile()?.getFilePath() || null;
+      
+      case 'baseName':
+        if ('getBaseName' in node && typeof (node as any).getBaseName === 'function') {
+          return (node as any).getBaseName() || null;
+        }
+        return node.getSourceFile()?.getBaseName() || null;
+      
+      case 'extension':
+        if ('getExtension' in node && typeof (node as any).getExtension === 'function') {
+          return (node as any).getExtension() || null;
+        }
+        return node.getSourceFile()?.getExtension() || null;
       
       default:
         return null;
