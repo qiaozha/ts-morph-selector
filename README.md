@@ -149,40 +149,27 @@ Query source files directly using SQL-like syntax:
 const allFiles = selector.query('SELECT * FROM SourceFile');
 
 // Find all service files
-const serviceFiles = selector.query(
-    "SELECT * FROM SourceFile WHERE baseName LIKE '%.service.ts'"
-);
+const serviceFiles = selector.query("SELECT * FROM SourceFile WHERE baseName LIKE '%.service.ts'");
 
 // Find files in specific directory
-const modelFiles = selector.query(
-    "SELECT * FROM SourceFile WHERE path LIKE '%/models/%'"
-);
+const modelFiles = selector.query("SELECT * FROM SourceFile WHERE path LIKE '%/models/%'");
 
 // Find specific files
 const configFiles = selector.query(
-    "SELECT * FROM SourceFile WHERE baseName IN ('config.ts', 'settings.ts')"
+    "SELECT * FROM SourceFile WHERE baseName IN ('config.ts', 'settings.ts')",
 );
 
 // Find TypeScript files (exclude .d.ts)
 const tsFiles = selector.query(
-    "SELECT * FROM SourceFile WHERE extension = '.ts' AND baseName NOT LIKE '%.d.ts'"
+    "SELECT * FROM SourceFile WHERE extension = '.ts' AND baseName NOT LIKE '%.d.ts'",
 );
-```
 
-Alternatively, use the `filePattern` option to filter source files before querying other nodes:
-
-```typescript
-// Create selector with file pattern filter
-const serviceSelector = new TsMorphSelector(project, {
-    filePattern: '**/*.service.ts'
-});
-
-// Query only classes in service files
-const serviceClasses = serviceSelector.query('SELECT * FROM ClassDeclaration');
-
-// Multiple file patterns
-const selector = new TsMorphSelector(project, {
-    filePattern: ['**/*.service.ts', '**/*.controller.ts']
+// Two-step approach: Get files then work with their contents
+const files = selector.query("SELECT * FROM SourceFile WHERE baseName LIKE '%.service.ts'");
+files.nodes.forEach((file) => {
+    const classes = file.getClasses();
+    const interfaces = file.getInterfaces();
+    // Work with nodes in each file
 });
 ```
 
@@ -266,7 +253,6 @@ interface QueryResult<T extends Node = Node> {
 interface SelectorOptions {
     includeNodeModules?: boolean;
     maxResults?: number;
-    filePattern?: string | string[];  // Glob patterns to filter source files
 }
 ```
 

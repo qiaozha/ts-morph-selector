@@ -16,7 +16,6 @@ import {
   SyntaxKind
 } from 'ts-morph';
 import { ParsedQuery, QueryResult, WhereCondition, QueryOperator, NodeType, SelectorOptions } from './types';
-import { minimatch } from 'minimatch';
 
 /**
  * Executes parsed queries against a ts-morph Project
@@ -28,8 +27,7 @@ export class QueryExecutor {
    * Execute a parsed query and return matching nodes
    */
   execute<T extends Node = Node>(query: ParsedQuery): QueryResult<T> {
-    const allSourceFiles = this.project.getSourceFiles();
-    const sourceFiles = this.filterSourceFiles(allSourceFiles);
+    const sourceFiles = this.project.getSourceFiles();
     
     // Special case: if querying for SourceFile nodes
     if (query.nodeType === 'SourceFile') {
@@ -65,24 +63,6 @@ export class QueryExecutor {
       nodes: filteredNodes as T[],
       references: references as Map<T, Node[]> | undefined
     };
-  }
-  
-  /**
-   * Filter source files based on file patterns
-   */
-  private filterSourceFiles(sourceFiles: SourceFile[]): SourceFile[] {
-    if (!this.options.filePattern) {
-      return sourceFiles;
-    }
-    
-    const patterns = Array.isArray(this.options.filePattern)
-      ? this.options.filePattern
-      : [this.options.filePattern];
-    
-    return sourceFiles.filter(sourceFile => {
-      const filePath = sourceFile.getFilePath().replace(/\\/g, '/');
-      return patterns.some(pattern => minimatch(filePath, pattern, { matchBase: true }));
-    });
   }
   
   /**

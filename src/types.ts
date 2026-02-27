@@ -72,20 +72,4 @@ export interface SelectorOptions {
    * Maximum number of results to return
    */
   maxResults?: number;
-  
-  /**
-   * File pattern(s) to filter source files
-   * Supports glob patterns like '**\/*.service.ts' or 'src/models/*.ts'
-   * Can be a single pattern or an array of patterns
-   * 
-   * @example
-   * ```typescript
-   * // Single pattern
-   * { filePattern: '**\/*.service.ts' }
-   * 
-   * // Multiple patterns
-   * { filePattern: ['**\/*.service.ts', '**\/*.controller.ts'] }
-   * ```
-   */
-  filePattern?: string | string[];
 }

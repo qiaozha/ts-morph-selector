@@ -154,19 +154,8 @@ nonServiceFiles.nodes.forEach(file => {
   console.log(`   - ${file.getBaseName()}`);
 });
 
-// Example 7: Query classes within filtered files (using filePattern option)
-console.log('\n7. Query classes in service files (using filePattern option):');
-const serviceSelector = new TsMorphSelector(project, {
-  filePattern: '**/*.service.ts'
-});
-const serviceClasses = serviceSelector.query<ClassDeclaration>('SELECT * FROM ClassDeclaration');
-console.log(`   Found ${serviceClasses.nodes.length} service classes:`);
-serviceClasses.nodes.forEach(cls => {
-  console.log(`   - ${cls.getName()} in ${cls.getSourceFile().getBaseName()}`);
-});
-
-// Example 8: Two-step approach - first get files, then query within them
-console.log('\n8. Two-step approach - find files then query interfaces:');
+// Example 7: Two-step approach - first get files, then query within them
+console.log('\n7. Two-step approach - find files then query within them:');
 const files = selector.query<SourceFile>("SELECT * FROM SourceFile WHERE path LIKE '%services%'");
 console.log(`   Step 1: Found ${files.nodes.length} service files`);
 
@@ -182,6 +171,21 @@ console.log(`   Step 2: Found ${interfaces.nodes.length} interfaces in service f
 interfaces.nodes.forEach(iface => {
   console.log(`   - ${iface.getName()}`);
 });
+
+// Example 8: Get files and then query classes within them
+console.log('\n8. Get service files and query their classes:');
+const serviceFilesWithClasses = selector.query<SourceFile>("SELECT * FROM SourceFile WHERE baseName LIKE '%.service.ts'");
+console.log(`   Found ${serviceFilesWithClasses.nodes.length} service files`);
+
+let totalClasses = 0;
+serviceFilesWithClasses.nodes.forEach(file => {
+  const classes = file.getClasses();
+  totalClasses += classes.length;
+  classes.forEach(cls => {
+    console.log(`   - ${cls.getName()} in ${file.getBaseName()}`);
+  });
+});
+console.log(`   Total: ${totalClasses} service classes`);
 
 console.log('\n=== Available Query Properties for SourceFile ===\n');
 console.log('When querying SourceFile, you can filter by:');
@@ -205,15 +209,16 @@ console.log('   SELECT * FROM SourceFile WHERE baseName NOT LIKE "%.test.ts"');
 console.log('\n6. Find specific set of files:');
 console.log('   SELECT * FROM SourceFile WHERE baseName IN ("index.ts", "main.ts", "app.ts")');
 
-console.log('\n=== Comparison: SourceFile Query vs filePattern Option ===\n');
-
-console.log('Method 1: Using SourceFile query (SQL-like):');
+console.log('\n=== Two-Step Pattern for Targeted Queries ===\n');
+console.log('Use SourceFile queries to narrow down your search scope:');
+console.log('\nStep 1: Find the files you want:');
 console.log('  const files = selector.query<SourceFile>("SELECT * FROM SourceFile WHERE baseName LIKE \'%.service.ts\'");');
-console.log('  // Returns actual SourceFile nodes you can work with');
+console.log('');
+console.log('Step 2: Work with those files directly:');
+console.log('  files.nodes.forEach(file => {');
+console.log('    const classes = file.getClasses();');
+console.log('    const interfaces = file.getInterfaces();');
+console.log('    // ... work with the nodes in each file');
+console.log('  });');
+console.log('\nThis approach gives you full control over which files to analyze!');
 
-console.log('\nMethod 2: Using filePattern option:');
-console.log('  const selector = new TsMorphSelector(project, { filePattern: "**/*.service.ts" });');
-console.log('  const classes = selector.query<ClassDeclaration>("SELECT * FROM ClassDeclaration");');
-console.log('  // Filters source files before querying other nodes');
-
-console.log('\nBoth methods are useful for different scenarios!');
